@@ -102,6 +102,12 @@ func TestRenderHomeViews(t *testing.T) {
 	if previewDir != "" {
 		savePNG(t, win.Canvas().Capture(), filepath.Join(previewDir, "ui_organize.png"))
 	}
+
+	psa.setWorkMode(model.WorkModePhone)
+	psa.setLanguage("en")
+	if previewDir != "" {
+		savePNG(t, win.Canvas().Capture(), filepath.Join(previewDir, "ui_en.png"))
+	}
 }
 
 func savePNG(t *testing.T, img image.Image, outPath string) {

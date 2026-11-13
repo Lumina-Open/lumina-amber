@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"lumina-amber/internal/i18n"
 )
 
 // TargetHealth describes the availability and free space of a destination directory.
@@ -31,10 +33,11 @@ func CheckTargetQuick(targetDir string) TargetHealth {
 }
 
 func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
+	s := i18n.S()
 	if strings.TrimSpace(targetDir) == "" {
 		return TargetHealth{
 			Ready:         false,
-			StatusMessage: "尚未选择目标目录",
+			StatusMessage: s.VolNotSelected,
 		}
 	}
 
@@ -42,7 +45,7 @@ func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
 	if err != nil {
 		return TargetHealth{
 			Ready:         false,
-			StatusMessage: fmt.Sprintf("路径无效: %v", err),
+			StatusMessage: fmt.Sprintf(s.VolInvalidPathFmt, err),
 		}
 	}
 
@@ -50,7 +53,7 @@ func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
 	if missingMount, ok := unpluggedMountRoot(absDir); ok {
 		return TargetHealth{
 			Ready:         false,
-			StatusMessage: fmt.Sprintf("外接存储未挂载: %s", missingMount),
+			StatusMessage: fmt.Sprintf(s.VolExtUnmountedFmt, missingMount),
 		}
 	}
 
@@ -59,18 +62,18 @@ func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
 		if os.IsNotExist(err) {
 			return TargetHealth{
 				Ready:         false,
-				StatusMessage: "目标目录不存在或硬盘未连接",
+				StatusMessage: s.VolMissingOrUnplugged,
 			}
 		}
 		return TargetHealth{
 			Ready:         false,
-			StatusMessage: fmt.Sprintf("无法访问目标目录: %v", err),
+			StatusMessage: fmt.Sprintf(s.VolNoAccessFmt, err),
 		}
 	}
 	if !info.IsDir() {
 		return TargetHealth{
 			Ready:         false,
-			StatusMessage: "目标路径不是文件夹",
+			StatusMessage: s.VolNotDir,
 		}
 	}
 
@@ -80,7 +83,7 @@ func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
 		if err != nil {
 			return TargetHealth{
 				Ready:         false,
-				StatusMessage: fmt.Sprintf("目标目录不可写: %v", err),
+				StatusMessage: fmt.Sprintf(s.VolNotWritableFmt, err),
 			}
 		}
 		probeName := probe.Name()
@@ -96,9 +99,9 @@ func checkTargetHealth(targetDir string, probeWrite bool) TargetHealth {
 		totalBytes = uint64(fsStat.Blocks) * bsize
 	}
 
-	msg := "已就绪"
+	msg := s.VolReady
 	if freeBytes > 0 {
-		msg = fmt.Sprintf("已就绪 · 剩余 %s", FormatBytes(freeBytes))
+		msg = fmt.Sprintf(s.VolReadyFreeFmt, FormatBytes(freeBytes))
 	}
 	return TargetHealth{
 		Ready:         true,

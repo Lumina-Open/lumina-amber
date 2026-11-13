@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
+	"lumina-amber/internal/i18n"
 	"lumina-amber/internal/model"
 	"lumina-amber/internal/source"
 	"lumina-amber/internal/sync"
@@ -31,6 +32,8 @@ type homeView struct {
 	metricTiles []*MetricTile
 	segTheme    *SegmentedControl
 	segMode     *SegmentedControl
+	btnLang     *PillButton
+	btnSettings *PillButton
 	modeBarRow  *fyne.Container
 	titleText   *StyledText
 	versionPill *SoftPill
@@ -100,6 +103,7 @@ func newHomeView(app *AmberApp) *homeView {
 
 func (h *homeView) build() {
 	t := h.app.Theme
+	s := h.app.lang()
 
 	// 1. Top Toolbar (macOS style)
 	appTile := newIconTile(t, resIconAppLogo, 40, 22, 11,
@@ -108,7 +112,7 @@ func (h *homeView) build() {
 	)
 	h.titleText = newStyledText(version.AppName, t.PrimaryTextColor(), 17.5, true)
 	h.versionPill = newSoftPill("v"+version.Version, t.AccentTintColor(), t.AccentColor())
-	h.subText = newStyledText("图片/视频分目录 · 年/年月归档 · SHA-256 自动去重", t.MutedTextColor(), 12, false)
+	h.subText = newStyledText(s.HeaderSubtitle, t.MutedTextColor(), 12, false)
 
 	titleLine := container.NewHBox(container.NewCenter(h.titleText), container.NewCenter(h.versionPill.Root))
 	titleCol := container.NewVBox(titleLine, h.subText)
@@ -117,7 +121,7 @@ func (h *homeView) build() {
 		container.New(layout.NewCustomPaddedLayout(0, 0, 6, 0), titleCol),
 	)
 
-	h.segTheme = newSegmentedControl(t, []string{"浅色", "深色", "纯黑"}, themeModeToSegIndex(t.Mode()), func(idx int) {
+	h.segTheme = newSegmentedControl(t, []string{s.ThemeLight, s.ThemeDark, s.ThemeAMOLED}, themeModeToSegIndex(t.Mode()), func(idx int) {
 		switch idx {
 		case 0:
 			h.app.setThemeMode(ThemeModeLight)
@@ -128,22 +132,34 @@ func (h *homeView) build() {
 		}
 	})
 
-	btnSettings := newPillButton(t, "设置", resIconSettings, PillSecondary, func() {
+	h.btnLang = newPillButton(t, s.BtnLangToggle, nil, PillSecondary, func() {
+		next := i18n.LangEN
+		if h.app.lang().LangCode == i18n.LangEN {
+			next = i18n.LangZH
+		}
+		h.app.setLanguage(next)
+	})
+
+	h.btnSettings = newPillButton(t, s.BtnSettings, resIconSettings, PillSecondary, func() {
 		h.app.showSettingsDialog()
 	})
 
 	header := container.NewBorder(
 		nil, nil,
 		headerLeft,
-		container.NewHBox(container.NewCenter(h.segTheme.Root), container.NewCenter(btnSettings)),
+		container.NewHBox(
+			container.NewCenter(h.segTheme.Root),
+			container.NewCenter(h.btnLang),
+			container.NewCenter(h.btnSettings),
+		),
 	)
 
-	// Mode Switcher Bar: [ 手机备份 | 目录整理 ]
+	// Mode Switcher Bar: [ Phone Backup | Organize ]
 	initialModeIdx := 0
 	if h.app.Config.WorkMode == model.WorkModeOrganize {
 		initialModeIdx = 1
 	}
-	h.segMode = newSegmentedControl(t, []string{"手机备份", "目录整理"}, initialModeIdx, func(idx int) {
+	h.segMode = newSegmentedControl(t, []string{s.ModePhone, s.ModeOrganize}, initialModeIdx, func(idx int) {
 		if idx == 1 {
 			h.app.setWorkMode(model.WorkModeOrganize)
 		} else {
@@ -160,9 +176,9 @@ func (h *homeView) build() {
 		func(th *LuminaTheme) color.Color { return th.AccentColor() },
 	)
 
-	h.sourceNameText = newStyledText("正在检测设备...", t.PrimaryTextColor(), 14.5, true)
-	h.sourcePill = newSoftPill("检测中", t.WarningTintColor(), t.WarningColor())
-	h.sourceSubText = newStyledText("请连接 USB 并开启调试，或选择本地/MTP目录", t.MutedTextColor(), 12, false)
+	h.sourceNameText = newStyledText(s.DetectingDevice, t.PrimaryTextColor(), 14.5, true)
+	h.sourcePill = newSoftPill(s.PillDetecting, t.WarningTintColor(), t.WarningColor())
+	h.sourceSubText = newStyledText(s.SourceSubHintDefault, t.MutedTextColor(), 12, false)
 
 	h.srcTitleRow = container.NewHBox(container.NewCenter(h.sourceNameText), container.NewCenter(h.sourcePill.Root))
 	srcInfo := container.NewVBox(
@@ -170,18 +186,18 @@ func (h *homeView) build() {
 		h.sourceSubText,
 	)
 
-	h.btnSwitchSrc = newPillButton(t, "切换", nil, PillSecondary, func() {
+	h.btnSwitchSrc = newPillButton(t, s.BtnSwitch, nil, PillSecondary, func() {
 		h.showSourceMenu()
 	})
 	h.btnSwitchSrc.SetTrailingIcon(resIconChevron)
 
-	h.btnRefresh = newPillButton(t, "刷新", resIconRefresh, PillSecondary, func() {
+	h.btnRefresh = newPillButton(t, s.BtnRefresh, resIconRefresh, PillSecondary, func() {
 		h.app.refreshDevicesAsync(false)
 	})
-	h.btnWifi = newPillButton(t, "无线", resIconWifi, PillSecondary, func() {
+	h.btnWifi = newPillButton(t, s.BtnWifi, resIconWifi, PillSecondary, func() {
 		h.app.showWirelessADBDialog()
 	})
-	h.btnPickDir = newPillButton(t, "MTP目录", resIconFolder, PillSecondary, func() {
+	h.btnPickDir = newPillButton(t, s.BtnPickMTP, resIconFolder, PillSecondary, func() {
 		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if err != nil || uri == nil {
 				return
@@ -199,18 +215,20 @@ func (h *homeView) build() {
 		container.NewCenter(h.btnPickDir),
 	)
 
-	h.btnPickOrgDir = newPillButton(t, "选择待整理目录", resIconFolder, PillTinted, func() {
+	h.btnPickOrgDir = newPillButton(t, s.BtnPickOrgDir, resIconFolder, PillTinted, func() {
 		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if err != nil || uri == nil {
 				return
 			}
+			h.app.mu.Lock()
 			h.app.Config.OrganizeSourceDir = uri.Path()
+			h.app.mu.Unlock()
 			h.app.saveConfig()
 			h.refreshSourceUI(false)
 		}, h.app.Window)
 	})
-	h.btnOpenOrgDir = newPillButton(t, "打开", nil, PillSecondary, func() {
-		if err := openInFileManager(h.app.Config.OrganizeSourceDir); err != nil {
+	h.btnOpenOrgDir = newPillButton(t, s.BtnOpen, nil, PillSecondary, func() {
+		if err := openInFileManager(h.app.configSnapshot().OrganizeSourceDir); err != nil {
 			dialog.ShowError(err, h.app.Window)
 		}
 	})
@@ -236,9 +254,9 @@ func (h *homeView) build() {
 		func(th *LuminaTheme) color.Color { return th.IndigoColor() },
 	)
 
-	h.targetNameText = newStyledText("尚未选择目标目录", t.PrimaryTextColor(), 14.5, true)
-	h.targetPill = newSoftPill("未设置", t.WarningTintColor(), t.WarningColor())
-	h.targetPathText = newStyledText("支持本地文件夹或外接移动硬盘", t.MutedTextColor(), 12, false)
+	h.targetNameText = newStyledText(s.TargetUnsetTitle, t.PrimaryTextColor(), 14.5, true)
+	h.targetPill = newSoftPill(s.PillUnset, t.WarningTintColor(), t.WarningColor())
+	h.targetPathText = newStyledText(s.TargetUnsetHint, t.MutedTextColor(), 12, false)
 
 	h.dstTitleRow = container.NewHBox(container.NewCenter(h.targetNameText), container.NewCenter(h.targetPill.Root))
 	dstInfo := container.NewVBox(
@@ -246,24 +264,26 @@ func (h *homeView) build() {
 		h.targetPathText,
 	)
 
-	h.btnChooseDst = newPillButton(t, "选择目标目录", resIconFolder, PillTinted, func() {
+	h.btnChooseDst = newPillButton(t, s.BtnChooseTarget, resIconFolder, PillTinted, func() {
 		dialog.ShowFolderOpen(func(uri fyne.ListableURI, err error) {
 			if err != nil || uri == nil {
 				return
 			}
+			h.app.mu.Lock()
 			h.app.Config.TargetDir = uri.Path()
 			h.app.Config.AddRecentTarget(uri.Path())
+			h.app.mu.Unlock()
 			h.app.saveConfig()
 			h.refreshTargetUI()
 		}, h.app.Window)
 	})
-	h.btnRecentDst = newPillButton(t, "最近", nil, PillSecondary, func() {
+	h.btnRecentDst = newPillButton(t, s.BtnRecent, nil, PillSecondary, func() {
 		h.showRecentTargetsMenu()
 	})
 	h.btnRecentDst.SetTrailingIcon(resIconChevron)
 
-	h.btnOpenDst = newPillButton(t, "打开", nil, PillSecondary, func() {
-		if err := openInFileManager(h.app.Config.TargetDir); err != nil {
+	h.btnOpenDst = newPillButton(t, s.BtnOpen, nil, PillSecondary, func() {
+		if err := openInFileManager(h.app.configSnapshot().TargetDir); err != nil {
 			dialog.ShowError(err, h.app.Window)
 		}
 	})
@@ -283,28 +303,28 @@ func (h *homeView) build() {
 	div2 := newHairlineDivider(t, 0)
 
 	// Row 3: Media Filter Chips + Organize Move Option + Rule Hint
-	h.chipPhotos = newFilterChip(t, "照片", resIconPhoto, h.app.Config.IncludePhotos, func(v bool) {
+	h.chipPhotos = newFilterChip(t, s.FilterPhotos, resIconPhoto, h.app.Config.IncludePhotos, func(v bool) {
 		h.app.mu.Lock()
 		h.app.Config.IncludePhotos = v
 		h.app.mu.Unlock()
 		h.app.saveConfig()
 		h.updateActionButtonsState()
 	})
-	h.chipVideos = newFilterChip(t, "视频", resIconVideo, h.app.Config.IncludeVideos, func(v bool) {
+	h.chipVideos = newFilterChip(t, s.FilterVideos, resIconVideo, h.app.Config.IncludeVideos, func(v bool) {
 		h.app.mu.Lock()
 		h.app.Config.IncludeVideos = v
 		h.app.mu.Unlock()
 		h.app.saveConfig()
 		h.updateActionButtonsState()
 	})
-	h.chipDeleteSrc = newFilterChip(t, "移动模式 (整理后移除原文件)", resIconFolder, h.app.Config.OrganizeDeleteSource, func(v bool) {
+	h.chipDeleteSrc = newFilterChip(t, s.FilterDeleteSrc, resIconFolder, h.app.Config.OrganizeDeleteSource, func(v bool) {
 		h.app.mu.Lock()
 		h.app.Config.OrganizeDeleteSource = v
 		h.app.mu.Unlock()
 		h.app.saveConfig()
 	})
 
-	h.ruleText = newStyledText("结构: picture/YYYY/YYYY-MM · video/YYYY/YYYY-MM", t.MutedTextColor(), 11.5, false)
+	h.ruleText = newStyledText(s.ArchiveRuleHint, t.MutedTextColor(), 11.5, false)
 
 	h.chipsBox = container.NewHBox(h.chipPhotos, h.chipVideos, h.chipDeleteSrc)
 	h.optionsRow = container.NewBorder(
@@ -322,17 +342,17 @@ func (h *homeView) build() {
 	))
 
 	// 3. Hero Backup Action & Progress Card
-	h.btnBackup = newPillButton(t, "一键自动备份", resIconSync, PillPrimary, func() {
+	h.btnBackup = newPillButton(t, s.BtnStartBackup, resIconSync, PillPrimary, func() {
 		h.app.startSync(false)
 	})
 	h.btnBackup.SetHero(44)
 
-	h.btnPreview = newPillButton(t, "预览扫描", resIconSearch, PillTinted, func() {
+	h.btnPreview = newPillButton(t, s.BtnPreview, resIconSearch, PillTinted, func() {
 		h.app.startSync(true)
 	})
 	h.btnPreview.SetHero(44)
 
-	h.btnCancel = newPillButton(t, "停止", resIconStop, PillDanger, func() {
+	h.btnCancel = newPillButton(t, s.BtnStop, resIconStop, PillDanger, func() {
 		h.app.cancelActiveSync()
 	})
 	h.btnCancel.SetHero(44)
@@ -345,24 +365,24 @@ func (h *homeView) build() {
 		h.btnBackup,
 	)
 
-	h.phaseText = newStyledText("就绪：下次打开可直接一键执行", t.PrimaryTextColor(), 13, true)
+	h.phaseText = newStyledText(s.PhaseIdleDefault, t.PrimaryTextColor(), 13, true)
 	h.speedText = newStyledText("", t.MutedTextColor(), 12, false)
 	h.progressBar = newAppleProgressBar(t)
 	h.progressRow = container.NewBorder(nil, nil, h.phaseText, h.speedText)
 
-	h.tileExported = newMetricTile(t, "新增归档", "0",
+	h.tileExported = newMetricTile(t, s.MetricExported, "0",
 		func(th *LuminaTheme) color.Color { return th.SuccessTintColor() },
 		func(th *LuminaTheme) color.Color { return th.SuccessColor() },
 	)
-	h.tileCached = newMetricTile(t, "已备份跳过", "0",
+	h.tileCached = newMetricTile(t, s.MetricCached, "0",
 		func(th *LuminaTheme) color.Color { return th.AccentTintColor() },
 		func(th *LuminaTheme) color.Color { return th.AccentColor() },
 	)
-	h.tileDedup = newMetricTile(t, "内容去重", "0",
+	h.tileDedup = newMetricTile(t, s.MetricDedup, "0",
 		func(th *LuminaTheme) color.Color { return th.WarningTintColor() },
 		func(th *LuminaTheme) color.Color { return th.WarningColor() },
 	)
-	h.tileFailed = newMetricTile(t, "失败", "0",
+	h.tileFailed = newMetricTile(t, s.MetricFailed, "0",
 		func(th *LuminaTheme) color.Color { return th.ErrorTintColor() },
 		func(th *LuminaTheme) color.Color { return th.ErrorColor() },
 	)
@@ -383,8 +403,8 @@ func (h *homeView) build() {
 	))
 
 	// 4. Minimalist Bottom Status Strip (Log modal on demand)
-	h.lastLogText = newStyledText("最近动态：等待操作", t.MutedTextColor(), 12, false)
-	h.btnShowLogs = newPillButton(t, "查看明细", resIconLog, PillSecondary, func() {
+	h.lastLogText = newStyledText(s.RecentActivityIdle, t.MutedTextColor(), 12, false)
+	h.btnShowLogs = newPillButton(t, s.BtnViewLogs, resIconLog, PillSecondary, func() {
 		h.showLogsModal()
 	})
 	h.footerRow = container.NewBorder(
@@ -398,7 +418,7 @@ func (h *homeView) build() {
 	h.dividers = []*HairlineDivider{div1, div2}
 	h.iconTiles = []*IconTile{appTile, h.srcIconTile, dstIconTile}
 	h.pillButtons = []*PillButton{
-		btnSettings, h.btnSwitchSrc, h.btnRefresh, h.btnWifi, h.btnPickDir,
+		h.btnLang, h.btnSettings, h.btnSwitchSrc, h.btnRefresh, h.btnWifi, h.btnPickDir,
 		h.btnPickOrgDir, h.btnOpenOrgDir,
 		h.btnChooseDst, h.btnRecentDst, h.btnOpenDst,
 		h.btnBackup, h.btnPreview, h.btnCancel, h.btnShowLogs,
@@ -439,24 +459,25 @@ func compactMiddle(s string, maxRunes int) string {
 
 func (h *homeView) refreshModeUI() {
 	t := h.app.Theme
-	isOrganize := h.app.Config.WorkMode == model.WorkModeOrganize
+	s := h.app.lang()
+	isOrganize := h.app.configSnapshot().WorkMode == model.WorkModeOrganize
 
 	if isOrganize {
 		h.segMode.SetSelected(1)
-		h.modeHint.SetText("从本地目录、SD卡或移动硬盘导入并按年月整理去重")
+		h.modeHint.SetText(s.ModeHintOrganize)
 		h.srcIconTile.SetIcon(t, resIconFolder)
 		h.phoneActionsBox.Hide()
 		h.orgActionsBox.Show()
 		h.chipDeleteSrc.Show()
-		h.btnBackup.SetText("一键导入整理")
+		h.btnBackup.SetText(s.BtnStartOrganize)
 	} else {
 		h.segMode.SetSelected(0)
-		h.modeHint.SetText("连接 Android 手机，下次打开可直接点击一键自动备份")
+		h.modeHint.SetText(s.ModeHintPhone)
 		h.srcIconTile.SetIcon(t, resIconPhone)
 		h.phoneActionsBox.Show()
 		h.orgActionsBox.Hide()
 		h.chipDeleteSrc.Hide()
-		h.btnBackup.SetText("一键自动备份")
+		h.btnBackup.SetText(s.BtnStartBackup)
 	}
 	h.modeBarRow.Refresh()
 	h.srcActionsStack.Refresh()
@@ -466,13 +487,55 @@ func (h *homeView) refreshModeUI() {
 	h.refreshSourceUI(true)
 }
 
+func (h *homeView) refreshLanguage() {
+	s := h.app.lang()
+	h.subText.SetText(s.HeaderSubtitle)
+	h.segTheme.SetLabels([]string{s.ThemeLight, s.ThemeDark, s.ThemeAMOLED})
+	h.btnLang.SetText(s.BtnLangToggle)
+	h.btnSettings.SetText(s.BtnSettings)
+	h.segMode.SetLabels([]string{s.ModePhone, s.ModeOrganize})
+	h.btnRefresh.SetText(s.BtnRefresh)
+	h.btnWifi.SetText(s.BtnWifi)
+	h.btnPickDir.SetText(s.BtnPickMTP)
+	h.btnPickOrgDir.SetText(s.BtnPickOrgDir)
+	h.btnOpenOrgDir.SetText(s.BtnOpen)
+	h.btnChooseDst.SetText(s.BtnChooseTarget)
+	h.btnRecentDst.SetText(s.BtnRecent)
+	h.btnOpenDst.SetText(s.BtnOpen)
+	h.chipPhotos.SetLabel(s.FilterPhotos)
+	h.chipVideos.SetLabel(s.FilterVideos)
+	h.chipDeleteSrc.SetLabel(s.FilterDeleteSrc)
+	h.ruleText.SetText(s.ArchiveRuleHint)
+	h.btnPreview.SetText(s.BtnPreview)
+	h.btnCancel.SetText(s.BtnStop)
+	h.tileExported.SetTitle(s.MetricExported)
+	h.tileCached.SetTitle(s.MetricCached)
+	h.tileDedup.SetTitle(s.MetricDedup)
+	h.tileFailed.SetTitle(s.MetricFailed)
+	h.btnShowLogs.SetText(s.BtnViewLogs)
+
+	h.app.mu.Lock()
+	syncing := h.app.isSyncing
+	h.app.mu.Unlock()
+	if !syncing {
+		h.phaseText.SetText(s.PhaseIdleDefault)
+	}
+	if len(h.logLines) == 0 {
+		h.lastLogText.SetText(s.RecentActivityIdle)
+	}
+	h.refreshModeUI()
+	h.refreshTargetUIQuick()
+	h.root.Refresh()
+}
+
 func (h *homeView) showSourceMenu() {
+	s := h.app.lang()
 	h.app.mu.Lock()
 	sources := append([]source.SourceDescriptor(nil), h.app.sources...)
 	h.app.mu.Unlock()
 
 	if len(sources) == 0 {
-		dialog.ShowInformation("无可用设备", "当前未发现其他 ADB 设备或挂载目录，请先连接手机或点击「MTP目录」。", h.app.Window)
+		dialog.ShowInformation(s.NoDeviceModalTitle, s.NoDeviceModalMsg, h.app.Window)
 		return
 	}
 
@@ -516,7 +579,8 @@ func (h *homeView) showRecentTargetsMenu() {
 }
 
 func (h *homeView) showLogsModal() {
-	text := "暂无同步记录。"
+	s := h.app.lang()
+	text := s.LogEmpty
 	if len(h.logLines) > 0 {
 		text = strings.Join(h.logLines, "\n")
 	}
@@ -525,7 +589,7 @@ func (h *homeView) showLogsModal() {
 	scroll := container.NewVScroll(lbl)
 	scroll.SetMinSize(fyne.NewSize(520, 280))
 
-	d := dialog.NewCustom("同步明细日志", "关闭", scroll, h.app.Window)
+	d := dialog.NewCustom(s.LogModalTitle, s.BtnClose, scroll, h.app.Window)
 	d.Show()
 }
 
@@ -572,35 +636,39 @@ func (h *homeView) applyTheme(t *LuminaTheme) {
 }
 
 func (h *homeView) formatSourceDirs() string {
-	if len(h.app.Config.SourceDirs) == 0 {
-		return "扫描默认目录"
+	s := h.app.lang()
+	dirs := h.app.configSnapshot().SourceDirs
+	if len(dirs) == 0 {
+		return s.ScanDefaultDirs
 	}
-	short := make([]string, 0, len(h.app.Config.SourceDirs))
-	for _, d := range h.app.Config.SourceDirs {
+	short := make([]string, 0, len(dirs))
+	for _, d := range dirs {
 		short = append(short, strings.TrimPrefix(d, "/sdcard/"))
 	}
-	return "扫描: " + strings.Join(short, " · ")
+	return s.ScanPrefix + strings.Join(short, " · ")
 }
 
 func (h *homeView) refreshSourceUI(silent bool) {
 	t := h.app.Theme
+	s := h.app.lang()
+	cfg := h.app.configSnapshot()
 
-	if h.app.Config.WorkMode == model.WorkModeOrganize {
-		orgDir := h.app.Config.OrganizeSourceDir
+	if cfg.WorkMode == model.WorkModeOrganize {
+		orgDir := cfg.OrganizeSourceDir
 		desc := source.NewOrganizeFolderDescriptor(orgDir)
 		if orgDir == "" {
-			h.sourceNameText.SetText("尚未选择待整理目录")
-			h.sourcePill.Set("未选择", t.WarningTintColor(), t.WarningColor())
-			h.sourceSubText.SetText("请选择包含散乱照片或视频的文件夹（支持子目录递归扫描）")
+			h.sourceNameText.SetText(s.NoOrgDirTitle)
+			h.sourcePill.Set(s.PillUnselected, t.WarningTintColor(), t.WarningColor())
+			h.sourceSubText.SetText(s.NoOrgDirSub)
 			h.btnOpenOrgDir.SetDisabled(true)
 		} else if desc.State == source.StateReady {
 			h.sourceNameText.SetText(compactMiddle(filepath.Base(orgDir), 28))
-			h.sourcePill.Set("已就绪", t.SuccessTintColor(), t.SuccessColor())
+			h.sourcePill.Set(s.PillReady, t.SuccessTintColor(), t.SuccessColor())
 			h.sourceSubText.SetText(compactMiddle(orgDir, 56))
 			h.btnOpenOrgDir.SetDisabled(false)
 		} else {
 			h.sourceNameText.SetText(compactMiddle(filepath.Base(orgDir), 28))
-			h.sourcePill.Set("不可用", t.ErrorTintColor(), t.ErrorColor())
+			h.sourcePill.Set(s.PillUnavailable, t.ErrorTintColor(), t.ErrorColor())
 			h.sourceSubText.SetText(compactMiddle(orgDir+" ("+desc.StatusMessage+")", 56))
 			h.btnOpenOrgDir.SetDisabled(true)
 		}
@@ -615,13 +683,8 @@ func (h *homeView) refreshSourceUI(silent bool) {
 	sel := h.app.selectedSource
 	h.app.mu.Unlock()
 
-	if len(sources) > 1 {
-		h.btnSwitchSrc.SetText(fmt.Sprintf("切换 (%d)", len(sources)))
-		h.btnSwitchSrc.SetDisabled(false)
-	} else {
-		h.btnSwitchSrc.SetText("切换")
-		h.btnSwitchSrc.SetDisabled(len(sources) == 0)
-	}
+	h.btnSwitchSrc.SetText(s.SwitchText(len(sources)))
+	h.btnSwitchSrc.SetDisabled(len(sources) <= 1)
 	h.phoneActionsBox.Refresh()
 	h.srcActionsStack.Refresh()
 
@@ -630,35 +693,35 @@ func (h *homeView) refreshSourceUI(silent bool) {
 
 		switch sel.State {
 		case source.StateReady:
-			h.sourcePill.Set("已就绪", t.SuccessTintColor(), t.SuccessColor())
+			h.sourcePill.Set(s.PillReady, t.SuccessTintColor(), t.SuccessColor())
 			if sel.Kind == model.SourceMounted && sel.RootPath != "" {
-				h.sourceSubText.SetText(compactMiddle("目录: "+sel.RootPath, 52))
+				h.sourceSubText.SetText(compactMiddle(s.DirPrefix+sel.RootPath, 52))
 			} else {
 				h.sourceSubText.SetText(compactMiddle(h.formatSourceDirs(), 52))
 			}
 		case source.StateUnauthorized:
-			h.sourcePill.Set("等待授权", t.WarningTintColor(), t.WarningColor())
-			h.sourceSubText.SetText("请在手机屏幕上点击「允许 USB 调试」并勾选始终允许")
+			h.sourcePill.Set(s.PillWaitAuth, t.WarningTintColor(), t.WarningColor())
+			h.sourceSubText.SetText(s.AuthorizeHint)
 		default:
-			h.sourcePill.Set("不可用", t.ErrorTintColor(), t.ErrorColor())
+			h.sourcePill.Set(s.PillUnavailable, t.ErrorTintColor(), t.ErrorColor())
 			h.sourceSubText.SetText(compactMiddle(sel.StatusMessage, 52))
 		}
 	} else {
-		h.sourceNameText.SetText("未检测到 Android 设备")
+		h.sourceNameText.SetText(s.NoAndroidDetected)
 		if adbBin == "" {
-			h.sourcePill.Set("未找到 ADB", t.WarningTintColor(), t.WarningColor())
-			h.sourceSubText.SetText("未检测到 adb，可切换到「目录整理」或点击「MTP目录」")
+			h.sourcePill.Set(s.PillNoADB, t.WarningTintColor(), t.WarningColor())
+			h.sourceSubText.SetText(s.NoADBSubHint)
 		} else {
-			h.sourcePill.Set("未连接", t.WellColor(), t.MutedTextColor())
-			h.sourceSubText.SetText("请插入 USB 并开启「USB 调试」，或使用「无线」/「目录整理」")
+			h.sourcePill.Set(s.PillDisconnected, t.WellColor(), t.MutedTextColor())
+			h.sourceSubText.SetText(s.DisconnectedSubHint)
 		}
 	}
 
 	if !silent {
 		if sel != nil {
-			h.appendLog(fmt.Sprintf("设备状态: %s (%s)", sel.Name, sel.StatusMessage))
+			h.appendLog(fmt.Sprintf(s.DeviceStatusFmt, sel.Name, sel.StatusMessage))
 		} else {
-			h.appendLog("刷新完成：暂未检测到已连接的手机")
+			h.appendLog(s.RefreshNoneLog)
 		}
 	}
 	h.srcTitleRow.Refresh()
@@ -675,6 +738,7 @@ func (h *homeView) refreshTargetUIQuick() {
 
 func (h *homeView) refreshTargetUIWithProbe(probeWrite bool) {
 	t := h.app.Theme
+	s := h.app.lang()
 	cfg := h.app.configSnapshot()
 	targetDir := cfg.TargetDir
 	var health sync.TargetHealth
@@ -685,9 +749,9 @@ func (h *homeView) refreshTargetUIWithProbe(probeWrite bool) {
 	}
 
 	if targetDir == "" {
-		h.targetNameText.SetText("尚未选择备份目标")
-		h.targetPill.Set("未设置", t.WarningTintColor(), t.WarningColor())
-		h.targetPathText.SetText("请选择本地磁盘或外接移动硬盘中的目标文件夹")
+		h.targetNameText.SetText(s.TargetUnsetTitle)
+		h.targetPill.Set(s.PillUnset, t.WarningTintColor(), t.WarningColor())
+		h.targetPathText.SetText(s.TargetUnsetSubHint)
 		h.btnOpenDst.SetDisabled(true)
 	} else {
 		displayName := filepath.Base(targetDir)
@@ -753,11 +817,12 @@ func (h *homeView) updateActionButtonsStateWithReady(targetReady bool) {
 }
 
 func (h *homeView) setSyncRunningState(running bool, dryRun bool) {
+	s := h.app.lang()
 	if running {
 		if dryRun {
-			h.phaseText.SetText("正在执行预览扫描...")
+			h.phaseText.SetText(s.PhasePreviewStart)
 		} else {
-			h.phaseText.SetText("正在启动整理同步...")
+			h.phaseText.SetText(s.PhaseSyncStart)
 		}
 		h.speedText.SetText("")
 		h.progressBar.SetValue(0)
@@ -771,6 +836,7 @@ func (h *homeView) setSyncRunningState(running bool, dryRun bool) {
 }
 
 func (h *homeView) updateProgress(p model.SyncProgress, dryRun bool) {
+	s := h.app.lang()
 	h.tileExported.SetValue(fmt.Sprintf("%d", p.Stats.Exported))
 	h.tileCached.SetValue(fmt.Sprintf("%d", p.Stats.SkippedCached))
 	h.tileDedup.SetValue(fmt.Sprintf("%d", p.Stats.SkippedDedup))
@@ -784,13 +850,13 @@ func (h *homeView) updateProgress(p model.SyncProgress, dryRun bool) {
 
 	switch p.Phase {
 	case model.PhaseIndexing:
-		h.phaseText.SetText("正在校验目标目录去重索引...")
+		h.phaseText.SetText(s.PhaseIndexing)
 	case model.PhaseScanning:
-		h.phaseText.SetText("正在扫描媒体文件...")
+		h.phaseText.SetText(s.PhaseScanning)
 	case model.PhaseSyncing:
-		verb := "正在归档"
+		verb := s.VerbSyncing
 		if dryRun {
-			verb = "正在比对"
+			verb = s.VerbComparing
 		}
 		h.phaseText.SetText(fmt.Sprintf("%s %d / %d · %s", verb, p.Current, p.Total, compactMiddle(filepath.Base(p.CurrentFile), 36)))
 		if p.BytesPerSec > 0 {
@@ -803,7 +869,7 @@ func (h *homeView) updateProgress(p model.SyncProgress, dryRun bool) {
 		h.phaseText.SetText(p.LogLine)
 		h.speedText.SetText("100%")
 	case model.PhaseCancelled:
-		h.phaseText.SetText("操作已取消")
+		h.phaseText.SetText(s.PhaseCancelled)
 		h.speedText.SetText("")
 	}
 	h.progressRow.Refresh()
@@ -822,6 +888,6 @@ func (h *homeView) appendLog(line string) {
 	if len(h.logLines) > 120 {
 		h.logLines = h.logLines[len(h.logLines)-120:]
 	}
-	h.lastLogText.SetText(compactMiddle("最近动态："+line, 64))
+	h.lastLogText.SetText(compactMiddle(h.app.lang().RecentActivityPrefix+line, 64))
 	h.footerRow.Refresh()
 }

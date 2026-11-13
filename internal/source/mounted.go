@@ -11,11 +11,13 @@ import (
 	"runtime"
 	"strings"
 
+	"lumina-amber/internal/i18n"
 	"lumina-amber/internal/model"
 )
 
 // DiscoverMountedSources detects Linux GVFS MTP mounts (and optional camera/SD mounts).
 func DiscoverMountedSources() []SourceDescriptor {
+	s := i18n.S()
 	var sources []SourceDescriptor
 	seen := make(map[string]struct{})
 
@@ -36,7 +38,7 @@ func DiscoverMountedSources() []SourceDescriptor {
 						Name:          formatGVFSName(name),
 						Kind:          model.SourceMounted,
 						State:         StateReady,
-						StatusMessage: "GVFS MTP 已挂载",
+						StatusMessage: s.DescGVFSMounted,
 						RootPath:      full,
 					})
 				}
@@ -59,10 +61,10 @@ func DiscoverMountedSources() []SourceDescriptor {
 							seen[vol] = struct{}{}
 							sources = append(sources, SourceDescriptor{
 								ID:            "dir:" + vol,
-								Name:          ent.Name() + " (存储卡/设备)",
+								Name:          ent.Name() + s.DescCardDeviceSuffix,
 								Kind:          model.SourceMounted,
 								State:         StateReady,
-								StatusMessage: "检测到 DCIM 目录",
+								StatusMessage: s.DescDCIMDetected,
 								RootPath:      vol,
 							})
 						}
@@ -84,10 +86,10 @@ func DiscoverMountedSources() []SourceDescriptor {
 					seen[vol] = struct{}{}
 					sources = append(sources, SourceDescriptor{
 						ID:            "dir:" + vol,
-						Name:          ent.Name() + " (存储卡/相机)",
+						Name:          ent.Name() + s.DescCardCameraSuffix,
 						Kind:          model.SourceMounted,
 						State:         StateReady,
-						StatusMessage: "检测到 DCIM 目录",
+						StatusMessage: s.DescDCIMDetected,
 						RootPath:      vol,
 					})
 				}
@@ -120,22 +122,23 @@ func hasMetaDB(metaDir string) bool {
 
 // NewMountedDescriptor creates a SourceDescriptor for an arbitrary user-chosen directory.
 func NewMountedDescriptor(rootPath string) SourceDescriptor {
-	return newDirDescriptor(rootPath, "目录", false)
+	return newDirDescriptor(rootPath, i18n.S().DescMTPRootLabel, false)
 }
 
 // NewOrganizeFolderDescriptor creates a SourceDescriptor that recursively scans all files in rootPath.
 func NewOrganizeFolderDescriptor(rootPath string) SourceDescriptor {
-	return newDirDescriptor(rootPath, "待整理目录", true)
+	return newDirDescriptor(rootPath, i18n.S().DescOrganizeLabel, true)
 }
 
 func newDirDescriptor(rootPath, suffix string, wholeRoot bool) SourceDescriptor {
+	s := i18n.S()
 	if rootPath == "" {
 		return SourceDescriptor{
 			ID:            "dir:",
-			Name:          "尚未选择待整理目录",
+			Name:          s.NoOrgDirTitle,
 			Kind:          model.SourceMounted,
 			State:         StateUnavailable,
-			StatusMessage: "请选择包含照片或视频的文件夹",
+			StatusMessage: s.NoOrgDirSub,
 			ScanWholeRoot: wholeRoot,
 		}
 	}
@@ -150,7 +153,7 @@ func newDirDescriptor(rootPath, suffix string, wholeRoot bool) SourceDescriptor 
 			Name:          filepath.Base(rootPath) + " (" + suffix + ")",
 			Kind:          model.SourceMounted,
 			State:         StateUnavailable,
-			StatusMessage: "目录不存在或未挂载",
+			StatusMessage: s.DescDirNotExist,
 			RootPath:      rootPath,
 			ScanWholeRoot: wholeRoot,
 		}
@@ -160,7 +163,7 @@ func newDirDescriptor(rootPath, suffix string, wholeRoot bool) SourceDescriptor 
 		Name:          filepath.Base(rootPath) + " (" + suffix + ")",
 		Kind:          model.SourceMounted,
 		State:         StateReady,
-		StatusMessage: "目录已就绪",
+		StatusMessage: s.DescDirReady,
 		RootPath:      rootPath,
 		ScanWholeRoot: wholeRoot,
 	}

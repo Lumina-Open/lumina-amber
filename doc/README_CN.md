@@ -1,7 +1,7 @@
 # Lumina Amber（光珀）
 
-> **作者**：`eddy` · **当前版本**：`0.9.0` · **开源协议**：GNU GPL v3.0  
-> 像琥珀封存光阴一样，离线整理、去重并留存每一帧珍贵照片与视频（Go + Fyne v2，支持 Linux & macOS）。
+> **作者**：`eddy` · **当前版本**：`1.0.0` · **开源协议**：GNU GPL v3.0  
+> 像琥珀封存光阴一样，离线整理、去重并留存每一帧珍贵照片与视频（Go + Fyne v2，支持中英双语、Linux & macOS）。
 
 [English README](../README.md)
 
@@ -29,7 +29,8 @@
 
 ### Linux
 ```bash
-# 需提前安装 GCC 与 OpenGL/X11 开发头文件（libgl1-mesa-dev xorg-dev libxxf86vm-dev）
+# 需提前安装 GCC 与 OpenGL/X11/Wayland 开发头文件
+# sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev libwayland-dev libxkbcommon-dev
 make test
 make build-linux
 ./bin/lumina-amber-linux-amd64
@@ -42,4 +43,4 @@ CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/macos/lumina-amber ./cmd/lumina-a
 ./scripts/package-mac.sh bin/macos/lumina-amber
 ```
 
-推送 `v*` 标签（例如 `git tag v0.9.0 && git push origin v0.9.0`）将由 GitHub Actions 自动构建 Linux 与 macOS 通用版安装包并发布到 **GitHub Releases**。
+推送 `v*` 标签（例如 `git tag v1.0.0 && git push origin v1.0.0`）将由 GitHub Actions 自动构建 Linux 与 macOS 通用版安装包并发布到 **GitHub Releases**。

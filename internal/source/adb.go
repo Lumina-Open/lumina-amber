@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"lumina-amber/internal/i18n"
 	"lumina-amber/internal/model"
 )
 
@@ -156,19 +157,20 @@ func (d ADBDevice) ToDescriptor() SourceDescriptor {
 		Kind: model.SourceADB,
 	}
 
+	s := i18n.S()
 	switch d.State {
 	case "device":
 		desc.State = StateReady
-		desc.StatusMessage = "已连接就绪"
+		desc.StatusMessage = s.ADBStateConnected
 	case "unauthorized":
 		desc.State = StateUnauthorized
-		desc.StatusMessage = "请在手机上点击「允许 USB 调试」"
+		desc.StatusMessage = s.ADBStateUnauthorized
 	case "offline":
 		desc.State = StateOffline
-		desc.StatusMessage = "设备离线，请重新插拔或重连"
+		desc.StatusMessage = s.ADBStateOffline
 	default:
 		desc.State = StateUnavailable
-		desc.StatusMessage = "状态: " + d.State
+		desc.StatusMessage = fmt.Sprintf(s.ADBStateFmt, d.State)
 	}
 	return desc
 }

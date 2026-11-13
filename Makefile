@@ -1,7 +1,7 @@
 .PHONY: all test build-linux package-mac clean run
 
 APP_NAME := lumina-amber
-APP_VERSION := 0.9.0
+APP_VERSION := 1.0.0
 BIN_DIR := bin
 SRC_DIR := ./cmd/lumina-amber
 LOCAL_LIB_DIR := $(HOME)/.local/lib

@@ -113,6 +113,9 @@ func (d *Database) LoadConfig() (model.AppConfig, error) {
 	if cfg.ThemeMode == "" {
 		cfg.ThemeMode = "light"
 	}
+	if cfg.Language != "en" {
+		cfg.Language = "zh"
+	}
 	return cfg, nil
 }
 

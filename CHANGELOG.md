@@ -2,6 +2,14 @@
 
 All notable changes to **Lumina Amber** will be documented in this file.
 
+## [1.0.0] - 2026-11-13
+
+### Added
+- **Bilingual Chinese / English UI (`internal/i18n`)**: Full localization across the main window, Settings, wireless ADB dialog, sync engine progress logs, and device/volume status pills with live switching (`EN` / `中文` header toggle and Settings selector) persisted in SQLite.
+
+### Fixed
+- **GitHub Actions Linux GUI Build**: Added `libwayland-dev` and `libxkbcommon-dev` dependencies required by Fyne v2.8 / GLFW 3.4 on `ubuntu-latest`.
+
 ## [0.9.0] - 2026-11-13
 
 ### Added

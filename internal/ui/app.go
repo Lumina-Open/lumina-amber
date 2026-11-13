@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 
 	"lumina-amber/internal/db"
+	"lumina-amber/internal/i18n"
 	"lumina-amber/internal/model"
 	"lumina-amber/internal/source"
 	syncengine "lumina-amber/internal/sync"
@@ -63,6 +64,7 @@ func NewAmberApp(dbPath string) (*AmberApp, error) {
 		_ = database.Close()
 		return nil, fmt.Errorf("load config: %w", err)
 	}
+	i18n.SetCurrent(cfg.Language)
 
 	a := app.NewWithID("org.lumina.amber")
 	luminaTheme := NewLuminaTheme(ThemeMode(cfg.ThemeMode))
@@ -151,6 +153,25 @@ func (a *AmberApp) setWorkMode(mode string) {
 	a.saveConfig()
 	if a.home != nil {
 		a.home.refreshModeUI()
+	}
+}
+
+func (a *AmberApp) lang() i18n.Catalog {
+	return i18n.For(a.configSnapshot().Language)
+}
+
+func (a *AmberApp) setLanguage(lang string) {
+	normalized := i18n.SetCurrent(lang)
+	a.mu.Lock()
+	a.Config.Language = normalized
+	watching := a.stopWatcher != nil
+	a.mu.Unlock()
+	a.saveConfig()
+	if a.home != nil {
+		a.home.refreshLanguage()
+	}
+	if watching {
+		a.refreshDevicesAsync(true)
 	}
 }
 
@@ -287,7 +308,7 @@ func (a *AmberApp) buildActiveMediaSource() (source.MediaSource, error) {
 	a.mu.Unlock()
 
 	if sel == nil {
-		return nil, fmt.Errorf("未检测到可用手机或目录，请连接手机或选择本地/MTP目录")
+		return nil, fmt.Errorf("%s", a.lang().NoSourceErr)
 	}
 	if sel.State != source.StateReady {
 		return nil, fmt.Errorf("%s: %s", sel.Name, sel.StatusMessage)
@@ -322,7 +343,7 @@ func (a *AmberApp) startSync(dryRun bool) {
 		a.mu.Lock()
 		a.isSyncing = false
 		a.mu.Unlock()
-		dialog.ShowError(fmt.Errorf("目标存储不可用：%s", health.StatusMessage), a.Window)
+		dialog.ShowError(fmt.Errorf(a.lang().ErrorTargetUnavailFmt, health.StatusMessage), a.Window)
 		return
 	}
 
@@ -357,6 +378,7 @@ func (a *AmberApp) startSync(dryRun bool) {
 		TargetDir:    cfgSnap.TargetDir,
 		DryRun:       dryRun,
 		DeleteSource: deleteSource,
+		Lang:         cfgSnap.Language,
 	}
 
 	go func() {
@@ -380,7 +402,7 @@ func (a *AmberApp) startSync(dryRun bool) {
 
 		fyne.Do(func() {
 			if runErr != nil && runErr != context.Canceled {
-				a.home.appendLog(fmt.Sprintf("错误: %v", runErr))
+				a.home.appendLog(fmt.Sprintf(a.lang().ErrorPrefixFmt, runErr))
 				dialog.ShowError(runErr, a.Window)
 			}
 		})
@@ -398,7 +420,7 @@ func (a *AmberApp) cancelActiveSync() {
 
 func openInFileManager(dir string) error {
 	if dir == "" {
-		return fmt.Errorf("目录为空")
+		return fmt.Errorf("%s", i18n.S().DirEmptyErr)
 	}
 	var cmd *exec.Cmd
 	if runtime.GOOS == "darwin" {

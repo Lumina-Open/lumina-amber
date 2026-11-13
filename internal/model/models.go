@@ -44,6 +44,7 @@ type AppConfig struct {
 	TargetDir            string     `json:"target_dir"`
 	RecentTargets        []string   `json:"recent_targets"`
 	ThemeMode            string     `json:"theme_mode"` // "light", "dark", or "amoled"
+	Language             string     `json:"language"`   // "zh" or "en"
 	CustomADBPath        string     `json:"custom_adb_path"`
 }
 
@@ -60,6 +61,7 @@ func DefaultConfig() AppConfig {
 		IncludePhotos: true,
 		IncludeVideos: true,
 		ThemeMode:     "light",
+		Language:      "zh",
 	}
 }
 

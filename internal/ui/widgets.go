@@ -564,6 +564,20 @@ func (sc *SegmentedControl) SetSelected(idx int) {
 	}
 }
 
+// SetLabels updates the segment button captions cleanly on language change.
+func (sc *SegmentedControl) SetLabels(labels []string) {
+	for i, it := range sc.items {
+		if i < len(labels) {
+			sc.options[i] = labels[i]
+			it.title = labels[i]
+			if it.lbl != nil {
+				it.lbl.Text = labels[i]
+				it.lbl.Refresh()
+			}
+		}
+	}
+}
+
 func (sc *SegmentedControl) ApplyTheme(t *LuminaTheme) {
 	sc.theme = t
 	sc.trackBg.FillColor = t.WellColor()
@@ -665,6 +679,15 @@ func newFilterChip(t *LuminaTheme, label string, icon fyne.Resource, checked boo
 func (fc *FilterChip) SetChecked(v bool) {
 	fc.checked = v
 	fc.syncColors()
+}
+
+// SetLabel updates the chip caption cleanly on language change.
+func (fc *FilterChip) SetLabel(label string) {
+	fc.label = label
+	if fc.lbl != nil {
+		fc.lbl.Text = label
+		fc.lbl.Refresh()
+	}
 }
 
 func (fc *FilterChip) ApplyTheme(t *LuminaTheme) {
@@ -870,6 +893,12 @@ func newMetricTile(t *LuminaTheme, title string, initial string, bgFn, fgFn func
 func (m *MetricTile) SetValue(v string) {
 	m.valTxt.Text = v
 	m.valTxt.Refresh()
+}
+
+// SetTitle updates the metric label cleanly on language change.
+func (m *MetricTile) SetTitle(title string) {
+	m.lblTxt.Text = title
+	m.lblTxt.Refresh()
 }
 
 func (m *MetricTile) ApplyTheme(t *LuminaTheme) {

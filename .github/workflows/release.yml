@@ -26,12 +26,12 @@ jobs:
       - name: Install Linux GUI Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev libwayland-dev libxkbcommon-dev libwayland-dev libxkbcommon-dev
 
       - name: Go Vet & Tests
         run: |
           go vet ./...
-          go test -race -v -count=1 ./internal/meta ./internal/db ./internal/organizer ./internal/source ./internal/sync ./internal/version
+          go test -race -v -count=1 ./internal/meta ./internal/db ./internal/i18n ./internal/organizer ./internal/source ./internal/sync ./internal/version
           go test -v -count=1 ./internal/ui ./cmd/lumina-amber
 
   build-linux:
@@ -51,7 +51,7 @@ jobs:
       - name: Install Linux GUI Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev libwayland-dev libxkbcommon-dev
 
       - name: Build & Package Linux Binary
         run: |

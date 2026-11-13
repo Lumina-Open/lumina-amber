@@ -16,6 +16,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"lumina-amber/internal/i18n"
 	"lumina-amber/internal/meta"
 	"lumina-amber/internal/model"
 	"lumina-amber/internal/organizer"
@@ -43,7 +44,8 @@ type SyncOptions struct {
 	Filter       model.MediaFilter
 	TargetDir    string
 	DryRun       bool
-	DeleteSource bool // When true and Source is a mounted folder, removes source file after verified archive/dedup
+	DeleteSource bool   // When true and Source is a mounted folder, removes source file after verified archive/dedup
+	Lang         string // UI language code ("zh" or "en"); defaults to i18n.Current()
 }
 
 // Engine orchestrates per-target meta indexing, concurrent hashing, two-tier deduplication, and atomic archive layout.
@@ -157,7 +159,7 @@ func refreshTargetIndexWithStore(
 					Current:     indexed,
 					Total:       len(tasks),
 					CurrentFile: filepath.Base(res.entry.RelPath),
-					LogLine:     fmt.Sprintf("正在并行建立目标目录 meta 去重索引 (%d/%d)...", indexed, len(tasks)),
+					LogLine:     fmt.Sprintf(i18n.S().EngineIndexingLogFmt, indexed, len(tasks)),
 				})
 			}
 		}
@@ -355,9 +357,14 @@ func (r *readSnapshot) lookupCache(sourceID, remotePath string, size, modUnix in
 // Run executes either a dry-run preview scan or a concurrent incremental backup with deterministic ordered commits.
 func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(model.SyncProgress)) (model.SyncStats, error) {
 	var stats model.SyncStats
+	lang := opts.Lang
+	if lang == "" {
+		lang = i18n.Current()
+	}
+	s := i18n.For(lang)
 
 	if opts.Source == nil {
-		return stats, errors.New("未选择来源设备")
+		return stats, errors.New(s.EngineNoSource)
 	}
 
 	health := CheckTargetHealth(opts.TargetDir)
@@ -371,7 +378,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 	}
 
 	if srcDesc := opts.Source.Descriptor(); srcDesc.Kind == model.SourceMounted {
-		if err := validateMountedSourceTarget(srcDesc.RootPath, targetRoot, opts.DeleteSource); err != nil {
+		if err := validateMountedSourceTarget(srcDesc.RootPath, targetRoot, opts.DeleteSource, s); err != nil {
 			return stats, err
 		}
 	}
@@ -385,7 +392,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 	// Phase 1: Load or refresh per-target deduplication metadata from <TargetDir>/meta/
 	emit(model.SyncProgress{
 		Phase:   model.PhaseIndexing,
-		LogLine: "正在并行校验目标目录 meta 索引...",
+		LogLine: s.EngineVerifyingMeta,
 	})
 
 	var store *meta.Store
@@ -397,7 +404,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 		if meta.Exists(targetRoot) {
 			roStore, openErr := meta.Open(targetRoot)
 			if openErr != nil {
-				return stats, fmt.Errorf("打开目标 meta 索引失败: %w", openErr)
+				return stats, fmt.Errorf(s.EngineOpenMetaFailFmt, openErr)
 			}
 			cached, err = roStore.LoadTargetIndex()
 			if err == nil {
@@ -405,38 +412,38 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 			}
 			_ = roStore.Close()
 			if err != nil {
-				return stats, fmt.Errorf("读取目标 meta 索引失败: %w", err)
+				return stats, fmt.Errorf(s.EngineReadMetaFailFmt, err)
 			}
 		}
 		targetEntries, err = scanTargetReadOnly(ctx, targetRoot, cached)
 		if err != nil {
-			return stats, fmt.Errorf("扫描目标目录失败: %w", err)
+			return stats, fmt.Errorf(s.EngineScanTargetFailFmt, err)
 		}
 	} else {
 		store, err = meta.Open(targetRoot)
 		if err != nil {
-			return stats, fmt.Errorf("打开目标 meta 索引失败: %w", err)
+			return stats, fmt.Errorf(s.EngineOpenMetaFailFmt, err)
 		}
 		defer func() { _ = store.Close() }()
 
 		targetEntries, err = refreshTargetIndexWithStore(ctx, targetRoot, store, onProgress)
 		if err != nil {
-			return stats, fmt.Errorf("目标 meta 索引更新失败: %w", err)
+			return stats, fmt.Errorf(s.EngineUpdateMetaFailFmt, err)
 		}
 		historyEntries, err = store.LoadSyncHistory()
 		if err != nil {
-			return stats, fmt.Errorf("读取目标同步历史失败: %w", err)
+			return stats, fmt.Errorf(s.EngineReadHistFailFmt, err)
 		}
 	}
 
 	// Phase 2: Scan source device
 	emit(model.SyncProgress{
 		Phase:   model.PhaseScanning,
-		LogLine: fmt.Sprintf("正在扫描 %s...", opts.Source.Descriptor().Name),
+		LogLine: fmt.Sprintf(s.EngineScanningSrcFmt, opts.Source.Descriptor().Name),
 	})
 	files, err := opts.Source.Scan(ctx, opts.SourceDirs, opts.Filter)
 	if err != nil {
-		return stats, fmt.Errorf("扫描设备失败: %w", err)
+		return stats, fmt.Errorf(s.EngineScanSrcFailFmt, err)
 	}
 
 	stats.TotalScanned = len(files)
@@ -444,7 +451,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 		emit(model.SyncProgress{
 			Phase:   model.PhaseCompleted,
 			Stats:   stats,
-			LogLine: "未发现符合条件的照片或视频",
+			LogLine: s.EngineNoMediaFound,
 		})
 		return stats, nil
 	}
@@ -452,7 +459,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 	stagingDir := filepath.Join(targetRoot, stagingDirName)
 	if !opts.DryRun {
 		if err := os.MkdirAll(stagingDir, 0o755); err != nil {
-			return stats, fmt.Errorf("创建临时目录失败: %w", err)
+			return stats, fmt.Errorf(s.EngineMkTempFailFmt, err)
 		}
 		defer cleanEmptyStaging(stagingDir)
 	}
@@ -573,7 +580,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 				idx:    job.idx,
 				file:   f,
 				kind:   resFailed,
-				errMsg: fmt.Sprintf("导出失败 [%s]: %v", f.Name, pullErr),
+				errMsg: fmt.Sprintf(s.EnginePullFailFmt, f.Name, pullErr),
 			}
 		}
 
@@ -644,7 +651,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 			if force || len(pendingTarget) >= dbBatchSize {
 				if len(pendingTarget) > 0 {
 					if err := store.UpsertTargetEntriesBatch(pendingTarget); err != nil {
-						flushErr = fmt.Errorf("写入目标 meta 索引失败: %w", err)
+						flushErr = fmt.Errorf(s.EngineWriteMetaFailFmt, err)
 						return flushErr
 					}
 					pendingTarget = pendingTarget[:0]
@@ -653,7 +660,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 			if force || len(pendingHistory) >= dbBatchSize {
 				if len(pendingHistory) > 0 {
 					if err := store.UpsertSyncHistoryBatch(pendingHistory); err != nil {
-						flushErr = fmt.Errorf("写入目标同步历史失败: %w", err)
+						flushErr = fmt.Errorf(s.EngineWriteHistFailFmt, err)
 						return flushErr
 					}
 					pendingHistory = pendingHistory[:0]
@@ -726,7 +733,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 					})
 				}
 				if isMountedSource {
-					logLine = fmt.Sprintf("已去重跳过: %s (与 %s 内容一致)", f.Name, res.existingRel)
+					logLine = fmt.Sprintf(s.EngineDedupSkippedFmt, f.Name, res.existingRel)
 				}
 			}
 
@@ -759,18 +766,18 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 						expectedSize:   res.actualSize,
 					})
 				}
-				logLine = fmt.Sprintf("已去重跳过: %s (与 %s 内容一致)", f.Name, existingRel)
+				logLine = fmt.Sprintf(s.EngineDedupSkippedFmt, f.Name, existingRel)
 			} else {
 				desiredRelOS := organizer.BuildMediaRelPath(f.Kind, res.captureTime, f.Name)
 				finalAbs, finalRelOS, err := resolveUniqueTargetPathLocked(targetRoot, desiredRelOS, reservedPaths)
 				if err != nil {
 					_ = os.Remove(res.stagePath)
 					stats.Failed++
-					logLine = fmt.Sprintf("创建目标目录失败 [%s]: %v", f.Name, err)
+					logLine = fmt.Sprintf(s.EngineMkTargetDirFailFmt, f.Name, err)
 				} else if err := moveStageFile(res.stagePath, finalAbs); err != nil {
 					_ = os.Remove(res.stagePath)
 					stats.Failed++
-					logLine = fmt.Sprintf("写入目标文件失败 [%s]: %v", f.Name, err)
+					logLine = fmt.Sprintf(s.EngineWriteTargetFailFmt, f.Name, err)
 				} else {
 					tsToApply := f.ModTime
 					if tsToApply.IsZero() {
@@ -854,7 +861,7 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 				Current: nextIdx,
 				Total:   len(files),
 				Stats:   stats,
-				LogLine: "备份已取消",
+				LogLine: s.EngineCancelled,
 			})
 			return stats, context.Canceled
 		}
@@ -882,18 +889,18 @@ func (e *Engine) Run(ctx context.Context, opts SyncOptions, onProgress func(mode
 			Current: nextIdx,
 			Total:   len(files),
 			Stats:   stats,
-			LogLine: "备份已取消",
+			LogLine: s.EngineCancelled,
 		})
 		return stats, ctx.Err()
 	}
 
 	summary := fmt.Sprintf(
-		"备份完成：新增 %d，缓存跳过 %d，内容去重 %d，失败 %d",
+		s.EngineDoneFmt,
 		stats.Exported, stats.SkippedCached, stats.SkippedDedup, stats.Failed,
 	)
 	if opts.DryRun {
 		summary = fmt.Sprintf(
-			"预览完成：待导出新文件 %d (%s)，缓存跳过 %d，内容去重 %d",
+			s.EnginePreviewDoneFmt,
 			stats.NewCandidates, FormatBytes(uint64(stats.BytesTotal)), stats.SkippedCached, stats.SkippedDedup,
 		)
 	}
@@ -1048,7 +1055,7 @@ func resolveUniqueTargetPathLocked(targetRoot, desiredRelOS string, reserved map
 				return candidateAbs, candidateRel, nil
 			}
 			if statErr != nil {
-				return "", "", fmt.Errorf("检查目标路径失败: %w", statErr)
+				return "", "", fmt.Errorf(i18n.S().EngineStatTargetFailFmt, statErr)
 			}
 		}
 		candidateName := fmt.Sprintf("%s_%d%s", stem, suffix, ext)
@@ -1076,7 +1083,7 @@ func cleanEmptyStaging(stagingDir string) {
 	}
 }
 
-func validateMountedSourceTarget(sourceDir, targetRoot string, deleteSource bool) error {
+func validateMountedSourceTarget(sourceDir, targetRoot string, deleteSource bool, s i18n.Catalog) error {
 	if sourceDir == "" {
 		return nil
 	}
@@ -1088,13 +1095,13 @@ func validateMountedSourceTarget(sourceDir, targetRoot string, deleteSource bool
 	dstClean := filepath.Clean(targetRoot)
 
 	if srcClean == dstClean {
-		return errors.New("目标目录不能与来源目录相同，请选择单独的整理目标目录")
+		return errors.New(s.EngineSameDirErr)
 	}
 	if isSubpath(dstClean, srcClean) {
-		return errors.New("目标目录不能位于来源目录内部")
+		return errors.New(s.EngineTargetInSrcErr)
 	}
 	if deleteSource && isSubpath(srcClean, dstClean) {
-		return errors.New("移动整理模式下，来源目录不能位于目标目录内部")
+		return errors.New(s.EngineMoveSrcInTargetErr)
 	}
 	return nil
 }

@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-0284C7?style=for-the-badge" alt="Platform Linux & macOS" />
-  <img src="https://img.shields.io/badge/Version-0.9.0-2563EB?style=for-the-badge" alt="Version 0.9.0" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-2563EB?style=for-the-badge" alt="Version 1.0.0" />
   <img src="https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go 1.24+" />
   <img src="https://img.shields.io/badge/UI-Fyne%20v2-1D4ED8?style=for-the-badge" alt="Fyne v2" />
   <img src="https://img.shields.io/badge/Privacy-100%25%20Offline-059669?style=for-the-badge" alt="Pure Offline" />
@@ -45,8 +45,8 @@
   - **Tier 2 (Content SHA-256)**: Prevents duplicate copies even across renamed files or multiple phones; files with matching names but different bytes are safely suffixed (`_1`, `_2`, ...).
 - **High-Throughput Concurrency**:
   - Bounded worker pools, `sync.Pool` 1 MiB I/O buffers, single-pass `copyAndHashFile` (`io.MultiWriter`), O(1) in-memory snapshot lookups, and 64-item batched SQLite commits with deterministic ordering.
-- **External Drive Guard & Remembered Defaults**:
-  - Detects unmounted external mount points on Linux (`/media`, `/run/media`) and macOS (`/Volumes`), and persists your last device, target drive, media filters, and theme (`Light` / `Dark` / `AMOLED`).
+- **External Drive Guard & Bilingual Remembered Defaults**:
+  - Detects unmounted external mount points on Linux (`/media`, `/run/media`) and macOS (`/Volumes`), supports one-click **Chinese / English (`中文 / EN`)** switching, and persists your last device, target drive, media filters, language, and theme (`Light` / `Dark` / `AMOLED`).
 
 ---
 
@@ -54,7 +54,7 @@
 
 ### Prerequisites
 - **Go 1.24+** with CGO enabled
-- **Linux**: GCC and OpenGL/X11 development headers (`libgl1-mesa-dev`, `xorg-dev`, `libxxf86vm-dev`)
+- **Linux**: GCC and OpenGL/X11/Wayland development headers (`libgl1-mesa-dev`, `xorg-dev`, `libxxf86vm-dev`, `libwayland-dev`, `libxkbcommon-dev`)
 - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
 - **Optional**: Android `adb` (`platform-tools`) on `PATH` for USB / Wireless ADB mode
 
@@ -80,7 +80,7 @@ lipo -create -output bin/macos/lumina-amber bin/macos/lumina-amber-arm64 bin/mac
 ## GitHub Actions & Releases
 
 - **CI (`.github/workflows/ci.yml`)**: Automatically runs `go vet`, `-race` unit tests, UI/CLI package tests, and produces both Linux `amd64` and macOS Universal `.app` build artifacts on pushes and pull requests to `main`.
-- **Release (`.github/workflows/release.yml`)**: Pushing a version tag (e.g. `git tag v0.9.0 && git push origin v0.9.0`) triggers automated builds for Linux and macOS, generates `SHA256SUMS.txt`, and publishes a GitHub Release.
+- **Release (`.github/workflows/release.yml`)**: Pushing a version tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`) triggers automated builds for Linux and macOS, generates `SHA256SUMS.txt`, and publishes a GitHub Release.
 
 ---
 
