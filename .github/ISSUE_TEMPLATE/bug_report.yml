@@ -1,0 +1,68 @@
+name: Bug Report
+description: Report a bug or sync issue to help improve Lumina Photo Sync
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please search existing issues first to avoid duplicates.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating System
+      options:
+        - Linux (amd64)
+        - macOS (Apple Silicon / arm64)
+        - macOS (Intel / amd64)
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: Output of `lumina-photo-sync -version` or shown in app Settings.
+      placeholder: e.g., v0.9.0
+    validations:
+      required: true
+  - type: dropdown
+    id: sync-mode
+    attributes:
+      label: Source / Sync Mode
+      options:
+        - Android ADB (USB)
+        - Android ADB (Wireless)
+        - Mounted MTP / Local Folder (Phone Mode)
+        - Folder Import & Organize
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what happened.
+      placeholder: Describe the issue...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Connect device or select source folder
+        2. Select target backup directory
+        3. Click Backup / Preview Scan
+        4. Observe error...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Details
+      description: Attach error details from the in-app "View Details" drawer (remove any personal paths if desired).

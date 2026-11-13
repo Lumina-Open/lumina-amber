@@ -1,0 +1,30 @@
+# Binaries and archives
+bin/
+fyne-cross/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.tar.xz
+*.app/
+*.icns
+
+# Test, coverage, and local databases
+*.test
+*.out
+coverage.out
+*.db
+*.db-shm
+*.db-wal
+.lumina-sync-tmp/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*~

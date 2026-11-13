@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Verify Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install Linux GUI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev
+
+      - name: Go Vet & Tests
+        run: |
+          go vet ./...
+          go test -race -v -count=1 ./internal/meta ./internal/db ./internal/organizer ./internal/source ./internal/sync ./internal/version
+          go test -v -count=1 ./internal/ui ./cmd/lumina-photo-sync
+
+  build-linux:
+    name: Build Linux Release
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install Linux GUI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libxxf86vm-dev
+
+      - name: Build & Package Linux Binary
+        run: |
+          mkdir -p bin/release
+          CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/release/lumina-photo-sync-linux-amd64 ./cmd/lumina-photo-sync
+          ./bin/release/lumina-photo-sync-linux-amd64 -version
+          tar -czf bin/release/lumina-photo-sync-linux-amd64.tar.gz -C bin/release lumina-photo-sync-linux-amd64
+
+      - name: Upload Linux Release Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: bin/release/*
+
+  build-macos:
+    name: Build macOS Universal Release
+    needs: verify
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Build & Package macOS Universal App
+        run: |
+          mkdir -p bin/macos
+          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
+            CGO_CFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
+            CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
+            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-arm64 ./cmd/lumina-photo-sync
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
+            CGO_CFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
+            CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
+            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-amd64 ./cmd/lumina-photo-sync
+          lipo -create -output bin/macos/lumina-photo-sync \
+            bin/macos/lumina-photo-sync-arm64 \
+            bin/macos/lumina-photo-sync-amd64
+          chmod +x ./scripts/package-mac.sh
+          ./scripts/package-mac.sh bin/macos/lumina-photo-sync
+
+      - name: Upload macOS Release Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: bin/macos/LuminaPhotoSync-macOS.zip
+
+  publish:
+    name: Publish GitHub Release
+    needs: [build-linux, build-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux Release Assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux
+          path: dist-release
+
+      - name: Download macOS Release Assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos
+          path: dist-release
+
+      - name: Generate Checksums
+        working-directory: dist-release
+        run: sha256sum lumina-photo-sync-linux-amd64 lumina-photo-sync-linux-amd64.tar.gz LuminaPhotoSync-macOS.zip > SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-release/lumina-photo-sync-linux-amd64
+            dist-release/lumina-photo-sync-linux-amd64.tar.gz
+            dist-release/LuminaPhotoSync-macOS.zip
+            dist-release/SHA256SUMS.txt
+          name: Lumina Photo Sync ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false

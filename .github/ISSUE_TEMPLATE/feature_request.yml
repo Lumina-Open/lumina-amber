@@ -1,0 +1,29 @@
+name: Feature Request
+description: Propose a new feature or enhancement for Lumina Photo Sync
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement for Lumina Photo Sync!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: Is your feature request related to a specific workflow or pain point?
+      placeholder: I would like to...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the behavior, UI, or CLI option you envision.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Operating system, phone model, storage layout, or mockups.

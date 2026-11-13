@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Lumina Photo Sync
+Comment=Offline Android photo & video backup and archive organizer
+Exec=lumina-photo-sync
+Icon=camera-photo
+Terminal=false
+Type=Application
+Categories=Utility;Graphics;Photography;
+Keywords=photo;video;backup;android;adb;deduplication;
