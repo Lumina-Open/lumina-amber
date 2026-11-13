@@ -126,7 +126,7 @@ jobs:
         run: sha256sum lumina-amber-linux-amd64 lumina-amber-linux-amd64.tar.gz LuminaAmber-macOS.zip > SHA256SUMS.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist-release/lumina-amber-linux-amd64
