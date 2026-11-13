@@ -110,13 +110,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Linux Release Assets
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-linux
           path: dist-release
 
       - name: Download macOS Release Assets
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-macos
           path: dist-release
