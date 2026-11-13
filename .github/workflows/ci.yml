@@ -35,7 +35,7 @@ jobs:
         run: go test -race -v -count=1 ./internal/meta ./internal/db ./internal/organizer ./internal/source ./internal/sync ./internal/version
 
       - name: Run UI & CLI Package Tests
-        run: go test -v -count=1 ./internal/ui ./cmd/lumina-photo-sync
+        run: go test -v -count=1 ./internal/ui ./cmd/lumina-amber
 
   build-linux:
     name: Build Linux (amd64)
@@ -59,17 +59,17 @@ jobs:
       - name: Build Linux Binary
         run: |
           mkdir -p bin
-          CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/lumina-photo-sync-linux-amd64 ./cmd/lumina-photo-sync
-          ./bin/lumina-photo-sync-linux-amd64 -version
-          tar -czf bin/lumina-photo-sync-linux-amd64.tar.gz -C bin lumina-photo-sync-linux-amd64
+          CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/lumina-amber-linux-amd64 ./cmd/lumina-amber
+          ./bin/lumina-amber-linux-amd64 -version
+          tar -czf bin/lumina-amber-linux-amd64.tar.gz -C bin lumina-amber-linux-amd64
 
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lumina-photo-sync-linux-amd64
+          name: lumina-amber-linux-amd64
           path: |
-            bin/lumina-photo-sync-linux-amd64
-            bin/lumina-photo-sync-linux-amd64.tar.gz
+            bin/lumina-amber-linux-amd64
+            bin/lumina-amber-linux-amd64.tar.gz
           retention-days: 14
 
   build-macos:
@@ -95,25 +95,25 @@ jobs:
           CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
             CGO_CFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
             CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
-            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-arm64 ./cmd/lumina-photo-sync
+            go build -ldflags="-s -w" -o bin/macos/lumina-amber-arm64 ./cmd/lumina-amber
           CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
             CGO_CFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
             CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
-            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-amd64 ./cmd/lumina-photo-sync
-          lipo -create -output bin/macos/lumina-photo-sync \
-            bin/macos/lumina-photo-sync-arm64 \
-            bin/macos/lumina-photo-sync-amd64
-          lipo -info bin/macos/lumina-photo-sync
-          ./bin/macos/lumina-photo-sync -version
+            go build -ldflags="-s -w" -o bin/macos/lumina-amber-amd64 ./cmd/lumina-amber
+          lipo -create -output bin/macos/lumina-amber \
+            bin/macos/lumina-amber-arm64 \
+            bin/macos/lumina-amber-amd64
+          lipo -info bin/macos/lumina-amber
+          ./bin/macos/lumina-amber -version
 
       - name: Package macOS App Bundle
         run: |
           chmod +x ./scripts/package-mac.sh
-          ./scripts/package-mac.sh bin/macos/lumina-photo-sync
+          ./scripts/package-mac.sh bin/macos/lumina-amber
 
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LuminaPhotoSync-macOS
-          path: bin/macos/LuminaPhotoSync-macOS.zip
+          name: LuminaAmber-macOS
+          path: bin/macos/LuminaAmber-macOS.zip
           retention-days: 14

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 func TestConfigPersistenceAndNoHashTables(t *testing.T) {

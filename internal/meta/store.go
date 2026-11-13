@@ -10,7 +10,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 const (

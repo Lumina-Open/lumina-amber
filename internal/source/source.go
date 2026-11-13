@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 // SourceState describes the readiness of a discovered device or volume.

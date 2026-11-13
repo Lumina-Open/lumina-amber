@@ -14,15 +14,15 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/dialog"
 
-	"lumina-photo-sync/internal/db"
-	"lumina-photo-sync/internal/model"
-	"lumina-photo-sync/internal/source"
-	syncengine "lumina-photo-sync/internal/sync"
-	"lumina-photo-sync/internal/version"
+	"lumina-amber/internal/db"
+	"lumina-amber/internal/model"
+	"lumina-amber/internal/source"
+	syncengine "lumina-amber/internal/sync"
+	"lumina-amber/internal/version"
 )
 
-// PhotoSyncApp coordinates application state, persistence, device discovery, and UI rendering.
-type PhotoSyncApp struct {
+// AmberApp coordinates application state, persistence, device discovery, and UI rendering.
+type AmberApp struct {
 	FyneApp fyne.App
 	Window  fyne.Window
 	DB      *db.Database
@@ -42,7 +42,7 @@ type PhotoSyncApp struct {
 	home *homeView
 }
 
-func (a *PhotoSyncApp) configSnapshot() model.AppConfig {
+func (a *AmberApp) configSnapshot() model.AppConfig {
 	a.mu.Lock()
 	cfg := a.Config
 	cfg.SourceDirs = append([]string(nil), a.Config.SourceDirs...)
@@ -51,8 +51,8 @@ func (a *PhotoSyncApp) configSnapshot() model.AppConfig {
 	return cfg
 }
 
-// NewPhotoSyncApp initializes the database, loads saved defaults, and builds the main window.
-func NewPhotoSyncApp(dbPath string) (*PhotoSyncApp, error) {
+// NewAmberApp initializes the database, loads saved defaults, and builds the main window.
+func NewAmberApp(dbPath string) (*AmberApp, error) {
 	database, err := db.Open(dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
@@ -64,7 +64,7 @@ func NewPhotoSyncApp(dbPath string) (*PhotoSyncApp, error) {
 		return nil, fmt.Errorf("load config: %w", err)
 	}
 
-	a := app.NewWithID("org.lumina.photosync")
+	a := app.NewWithID("org.lumina.amber")
 	luminaTheme := NewLuminaTheme(ThemeMode(cfg.ThemeMode))
 	a.Settings().SetTheme(luminaTheme)
 
@@ -72,7 +72,7 @@ func NewPhotoSyncApp(dbPath string) (*PhotoSyncApp, error) {
 	w.Resize(fyne.NewSize(900, 620))
 	w.CenterOnScreen()
 
-	psa := &PhotoSyncApp{
+	psa := &AmberApp{
 		FyneApp: a,
 		Window:  w,
 		DB:      database,
@@ -85,7 +85,7 @@ func NewPhotoSyncApp(dbPath string) (*PhotoSyncApp, error) {
 }
 
 // Run builds the UI, starts background device discovery, and enters the Fyne event loop.
-func (a *PhotoSyncApp) Run() {
+func (a *AmberApp) Run() {
 	a.home = newHomeView(a)
 	a.Window.SetContent(a.home.root)
 
@@ -110,7 +110,7 @@ func (a *PhotoSyncApp) Run() {
 	a.Window.ShowAndRun()
 }
 
-func (a *PhotoSyncApp) watchDevicesLoop(ctx context.Context) {
+func (a *AmberApp) watchDevicesLoop(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
@@ -129,7 +129,7 @@ func (a *PhotoSyncApp) watchDevicesLoop(ctx context.Context) {
 	}
 }
 
-func (a *PhotoSyncApp) setThemeMode(mode ThemeMode) {
+func (a *AmberApp) setThemeMode(mode ThemeMode) {
 	a.mu.Lock()
 	a.Config.ThemeMode = string(mode)
 	a.mu.Unlock()
@@ -141,7 +141,7 @@ func (a *PhotoSyncApp) setThemeMode(mode ThemeMode) {
 	}
 }
 
-func (a *PhotoSyncApp) setWorkMode(mode string) {
+func (a *AmberApp) setWorkMode(mode string) {
 	if mode != model.WorkModeOrganize {
 		mode = model.WorkModePhone
 	}
@@ -154,7 +154,7 @@ func (a *PhotoSyncApp) setWorkMode(mode string) {
 	}
 }
 
-func (a *PhotoSyncApp) saveConfig() {
+func (a *AmberApp) saveConfig() {
 	if err := a.DB.SaveConfig(a.configSnapshot()); err != nil {
 		fyne.Do(func() {
 			dialog.ShowError(err, a.Window)
@@ -162,7 +162,7 @@ func (a *PhotoSyncApp) saveConfig() {
 	}
 }
 
-func (a *PhotoSyncApp) selectSource(desc source.SourceDescriptor) {
+func (a *AmberApp) selectSource(desc source.SourceDescriptor) {
 	a.mu.Lock()
 	cp := desc
 	a.selectedSource = &cp
@@ -177,7 +177,7 @@ func (a *PhotoSyncApp) selectSource(desc source.SourceDescriptor) {
 	}
 }
 
-func (a *PhotoSyncApp) refreshDevicesAsync(silent bool) {
+func (a *AmberApp) refreshDevicesAsync(silent bool) {
 	if !a.refreshing.CompareAndSwap(false, true) {
 		return
 	}
@@ -272,7 +272,7 @@ func (a *PhotoSyncApp) refreshDevicesAsync(silent bool) {
 	}()
 }
 
-func (a *PhotoSyncApp) buildActiveMediaSource() (source.MediaSource, error) {
+func (a *AmberApp) buildActiveMediaSource() (source.MediaSource, error) {
 	if a.Config.WorkMode == model.WorkModeOrganize {
 		desc := source.NewOrganizeFolderDescriptor(a.Config.OrganizeSourceDir)
 		if desc.State != source.StateReady {
@@ -299,7 +299,7 @@ func (a *PhotoSyncApp) buildActiveMediaSource() (source.MediaSource, error) {
 	return source.NewMountedSource(*sel), nil
 }
 
-func (a *PhotoSyncApp) startSync(dryRun bool) {
+func (a *AmberApp) startSync(dryRun bool) {
 	a.mu.Lock()
 	if a.isSyncing {
 		a.mu.Unlock()
@@ -387,7 +387,7 @@ func (a *PhotoSyncApp) startSync(dryRun bool) {
 	}()
 }
 
-func (a *PhotoSyncApp) cancelActiveSync() {
+func (a *AmberApp) cancelActiveSync() {
 	a.mu.Lock()
 	cancel := a.cancelSync
 	a.mu.Unlock()

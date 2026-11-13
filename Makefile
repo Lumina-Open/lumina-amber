@@ -1,9 +1,9 @@
 .PHONY: all test build-linux package-mac clean run
 
-APP_NAME := lumina-photo-sync
+APP_NAME := lumina-amber
 APP_VERSION := 0.9.0
 BIN_DIR := bin
-SRC_DIR := ./cmd/lumina-photo-sync
+SRC_DIR := ./cmd/lumina-amber
 LOCAL_LIB_DIR := $(HOME)/.local/lib
 LIB_FLAGS := $(if $(wildcard $(LOCAL_LIB_DIR)),CGO_LDFLAGS="-L$(LOCAL_LIB_DIR)") CGO_ENABLED=1
 

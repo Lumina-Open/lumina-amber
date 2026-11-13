@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Lumina Photo Sync
+Name=Lumina Amber
 Comment=Offline Android photo & video backup and archive organizer
-Exec=lumina-photo-sync
+Exec=lumina-amber
 Icon=camera-photo
 Terminal=false
 Type=Application

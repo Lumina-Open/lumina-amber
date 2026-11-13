@@ -1,12 +1,12 @@
 name: Feature Request
-description: Propose a new feature or enhancement for Lumina Photo Sync
+description: Propose a new feature or enhancement for Lumina Amber
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting an improvement for Lumina Photo Sync!
+        Thank you for suggesting an improvement for Lumina Amber!
   - type: textarea
     id: problem
     attributes:

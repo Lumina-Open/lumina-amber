@@ -13,14 +13,14 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
-	"lumina-photo-sync/internal/model"
-	"lumina-photo-sync/internal/source"
-	"lumina-photo-sync/internal/sync"
-	"lumina-photo-sync/internal/version"
+	"lumina-amber/internal/model"
+	"lumina-amber/internal/source"
+	"lumina-amber/internal/sync"
+	"lumina-amber/internal/version"
 )
 
 type homeView struct {
-	app  *PhotoSyncApp
+	app  *AmberApp
 	root fyne.CanvasObject
 
 	// Theme-aware custom elements
@@ -88,12 +88,11 @@ type homeView struct {
 	// Bottom log strip
 	footerRow   *fyne.Container
 	lastLogText *StyledText
-	authorText  *StyledText
 	btnShowLogs *PillButton
 	logLines    []string
 }
 
-func newHomeView(app *PhotoSyncApp) *homeView {
+func newHomeView(app *AmberApp) *homeView {
 	h := &homeView{app: app}
 	h.build()
 	return h
@@ -385,14 +384,13 @@ func (h *homeView) build() {
 
 	// 4. Minimalist Bottom Status Strip (Log modal on demand)
 	h.lastLogText = newStyledText("最近动态：等待操作", t.MutedTextColor(), 12, false)
-	h.authorText = newStyledText(fmt.Sprintf("v%s · 作者 %s", version.Version, version.Author), t.MutedTextColor(), 11.5, false)
 	h.btnShowLogs = newPillButton(t, "查看明细", resIconLog, PillSecondary, func() {
 		h.showLogsModal()
 	})
 	h.footerRow = container.NewBorder(
 		nil, nil,
 		container.NewCenter(h.lastLogText),
-		container.NewHBox(container.NewCenter(h.authorText), h.btnShowLogs),
+		h.btnShowLogs,
 	)
 
 	// Register theme-aware elements
@@ -537,7 +535,6 @@ func (h *homeView) applyTheme(t *LuminaTheme) {
 	h.titleText.SetColor(t.PrimaryTextColor())
 	h.versionPill.Set("v"+version.Version, t.AccentTintColor(), t.AccentColor())
 	h.subText.SetColor(t.MutedTextColor())
-	h.authorText.SetColor(t.MutedTextColor())
 	h.modeHint.SetColor(t.MutedTextColor())
 	h.ruleText.SetColor(t.MutedTextColor())
 	h.sourceNameText.SetColor(t.PrimaryTextColor())

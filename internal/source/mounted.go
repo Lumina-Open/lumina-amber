@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 // DiscoverMountedSources detects Linux GVFS MTP mounts (and optional camera/SD mounts).

@@ -1,4 +1,4 @@
-# Lumina Photo Sync
+# Lumina Amber (光珀)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-0284C7?style=for-the-badge" alt="Platform Linux & macOS" />
@@ -62,17 +62,17 @@
 ```bash
 make test
 make build-linux
-./bin/lumina-photo-sync-linux-amd64 -version
-./bin/lumina-photo-sync-linux-amd64
+./bin/lumina-amber-linux-amd64 -version
+./bin/lumina-amber-linux-amd64
 ```
 
 ### macOS (Universal `.app` Bundle)
 On a Mac, or automatically via GitHub Actions (`macos-latest`):
 ```bash
-CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-arm64 ./cmd/lumina-photo-sync
-CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-amd64 ./cmd/lumina-photo-sync
-lipo -create -output bin/macos/lumina-photo-sync bin/macos/lumina-photo-sync-arm64 bin/macos/lumina-photo-sync-amd64
-./scripts/package-mac.sh bin/macos/lumina-photo-sync
+CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -w" -o bin/macos/lumina-amber-arm64 ./cmd/lumina-amber
+CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -w" -o bin/macos/lumina-amber-amd64 ./cmd/lumina-amber
+lipo -create -output bin/macos/lumina-amber bin/macos/lumina-amber-arm64 bin/macos/lumina-amber-amd64
+./scripts/package-mac.sh bin/macos/lumina-amber
 ```
 
 ---

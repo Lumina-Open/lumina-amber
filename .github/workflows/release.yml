@@ -32,7 +32,7 @@ jobs:
         run: |
           go vet ./...
           go test -race -v -count=1 ./internal/meta ./internal/db ./internal/organizer ./internal/source ./internal/sync ./internal/version
-          go test -v -count=1 ./internal/ui ./cmd/lumina-photo-sync
+          go test -v -count=1 ./internal/ui ./cmd/lumina-amber
 
   build-linux:
     name: Build Linux Release
@@ -56,9 +56,9 @@ jobs:
       - name: Build & Package Linux Binary
         run: |
           mkdir -p bin/release
-          CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/release/lumina-photo-sync-linux-amd64 ./cmd/lumina-photo-sync
-          ./bin/release/lumina-photo-sync-linux-amd64 -version
-          tar -czf bin/release/lumina-photo-sync-linux-amd64.tar.gz -C bin/release lumina-photo-sync-linux-amd64
+          CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/release/lumina-amber-linux-amd64 ./cmd/lumina-amber
+          ./bin/release/lumina-amber-linux-amd64 -version
+          tar -czf bin/release/lumina-amber-linux-amd64.tar.gz -C bin/release lumina-amber-linux-amd64
 
       - name: Upload Linux Release Files
         uses: actions/upload-artifact@v4
@@ -86,22 +86,22 @@ jobs:
           CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
             CGO_CFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
             CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch arm64" \
-            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-arm64 ./cmd/lumina-photo-sync
+            go build -ldflags="-s -w" -o bin/macos/lumina-amber-arm64 ./cmd/lumina-amber
           CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
             CGO_CFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
             CGO_LDFLAGS="-mmacosx-version-min=11.0 -arch x86_64" \
-            go build -ldflags="-s -w" -o bin/macos/lumina-photo-sync-amd64 ./cmd/lumina-photo-sync
-          lipo -create -output bin/macos/lumina-photo-sync \
-            bin/macos/lumina-photo-sync-arm64 \
-            bin/macos/lumina-photo-sync-amd64
+            go build -ldflags="-s -w" -o bin/macos/lumina-amber-amd64 ./cmd/lumina-amber
+          lipo -create -output bin/macos/lumina-amber \
+            bin/macos/lumina-amber-arm64 \
+            bin/macos/lumina-amber-amd64
           chmod +x ./scripts/package-mac.sh
-          ./scripts/package-mac.sh bin/macos/lumina-photo-sync
+          ./scripts/package-mac.sh bin/macos/lumina-amber
 
       - name: Upload macOS Release Archive
         uses: actions/upload-artifact@v4
         with:
           name: release-macos
-          path: bin/macos/LuminaPhotoSync-macOS.zip
+          path: bin/macos/LuminaAmber-macOS.zip
 
   publish:
     name: Publish GitHub Release
@@ -123,17 +123,17 @@ jobs:
 
       - name: Generate Checksums
         working-directory: dist-release
-        run: sha256sum lumina-photo-sync-linux-amd64 lumina-photo-sync-linux-amd64.tar.gz LuminaPhotoSync-macOS.zip > SHA256SUMS.txt
+        run: sha256sum lumina-amber-linux-amd64 lumina-amber-linux-amd64.tar.gz LuminaAmber-macOS.zip > SHA256SUMS.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist-release/lumina-photo-sync-linux-amd64
-            dist-release/lumina-photo-sync-linux-amd64.tar.gz
-            dist-release/LuminaPhotoSync-macOS.zip
+            dist-release/lumina-amber-linux-amd64
+            dist-release/lumina-amber-linux-amd64.tar.gz
+            dist-release/LuminaAmber-macOS.zip
             dist-release/SHA256SUMS.txt
-          name: Lumina Photo Sync ${{ github.ref_name }}
+          name: Lumina Amber ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 // ADBDevice represents a single device entry returned by `adb devices -l`.

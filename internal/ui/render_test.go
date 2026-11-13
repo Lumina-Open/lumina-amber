@@ -10,10 +10,10 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
 
-	"lumina-photo-sync/internal/db"
-	"lumina-photo-sync/internal/model"
-	"lumina-photo-sync/internal/source"
-	syncengine "lumina-photo-sync/internal/sync"
+	"lumina-amber/internal/db"
+	"lumina-amber/internal/model"
+	"lumina-amber/internal/source"
+	syncengine "lumina-amber/internal/sync"
 )
 
 func TestRenderHomeViews(t *testing.T) {
@@ -30,7 +30,7 @@ func TestRenderHomeViews(t *testing.T) {
 	testApp := test.NewApp()
 	defer testApp.Quit()
 
-	win := testApp.NewWindow("Lumina Photo Sync")
+	win := testApp.NewWindow("Lumina Amber")
 	win.Resize(fyne.NewSize(900, 620))
 
 	orgDir := filepath.Join(tmp, "UnsortedPhotos")
@@ -41,7 +41,7 @@ func TestRenderHomeViews(t *testing.T) {
 	cfg.OrganizeSourceDir = orgDir
 	cfg.AddRecentTarget(targetDir)
 
-	psa := &PhotoSyncApp{
+	psa := &AmberApp{
 		FyneApp: testApp,
 		Window:  win,
 		DB:      database,

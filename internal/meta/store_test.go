@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 func TestTargetMetaStoreLifecycleAndPortability(t *testing.T) {

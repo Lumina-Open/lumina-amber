@@ -11,12 +11,12 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
-	"lumina-photo-sync/internal/meta"
-	"lumina-photo-sync/internal/source"
-	"lumina-photo-sync/internal/version"
+	"lumina-amber/internal/meta"
+	"lumina-amber/internal/source"
+	"lumina-amber/internal/version"
 )
 
-func (a *PhotoSyncApp) showWirelessADBDialog() {
+func (a *AmberApp) showWirelessADBDialog() {
 	addrEntry := widget.NewEntry()
 	addrEntry.SetPlaceHolder("例如 192.168.1.50:5555")
 
@@ -68,7 +68,7 @@ func formatTargetMetaSummary(targetDir string) string {
 	)
 }
 
-func (a *PhotoSyncApp) showSettingsDialog() {
+func (a *AmberApp) showSettingsDialog() {
 	dirsEntry := widget.NewMultiLineEntry()
 	dirsEntry.SetText(strings.Join(a.Config.SourceDirs, "\n"))
 	dirsEntry.SetMinRowsVisible(4)

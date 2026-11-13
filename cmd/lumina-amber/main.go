@@ -6,14 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"lumina-photo-sync/internal/ui"
-	"lumina-photo-sync/internal/version"
+	"lumina-amber/internal/ui"
+	"lumina-amber/internal/version"
 )
 
 func main() {
 	var dbPathFlag string
 	var showVersion bool
-	flag.StringVar(&dbPathFlag, "db", "", "Path to the lumina_sync.db database file")
+	flag.StringVar(&dbPathFlag, "db", "", "Path to the lumina_amber.db database file")
 	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
 	flag.Parse()
 
@@ -29,12 +29,12 @@ func main() {
 			homeDir, _ := os.UserHomeDir()
 			cfgDir = filepath.Join(homeDir, ".config")
 		}
-		dbPath = filepath.Join(cfgDir, "lumina-photo-sync", "lumina_sync.db")
+		dbPath = filepath.Join(cfgDir, "lumina-amber", "lumina_amber.db")
 	}
 
-	app, err := ui.NewPhotoSyncApp(dbPath)
+	app, err := ui.NewAmberApp(dbPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error initializing Lumina Photo Sync: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Fatal error initializing %s: %v\n", version.AppName, err)
 		os.Exit(1)
 	}
 

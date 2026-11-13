@@ -1,4 +1,4 @@
-module lumina-photo-sync
+module lumina-amber
 
 go 1.24.0
 

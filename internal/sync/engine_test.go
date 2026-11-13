@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"lumina-photo-sync/internal/meta"
-	"lumina-photo-sync/internal/model"
-	"lumina-photo-sync/internal/source"
+	"lumina-amber/internal/meta"
+	"lumina-amber/internal/model"
+	"lumina-amber/internal/source"
 )
 
 type mockSource struct {

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 func TestParseTimeFromFilename(t *testing.T) {

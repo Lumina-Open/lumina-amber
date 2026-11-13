@@ -14,7 +14,7 @@ import (
 
 	"github.com/rwcarlsen/goexif/exif"
 
-	"lumina-photo-sync/internal/model"
+	"lumina-amber/internal/model"
 )
 
 var (

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **Lumina Photo Sync** will be documented in this file.
+All notable changes to **Lumina Amber** will be documented in this file.
 
 ## [0.9.0] - 2026-11-13
 
