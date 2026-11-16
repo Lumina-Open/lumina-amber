@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -106,10 +107,10 @@ func (h *homeView) build() {
 	s := h.app.lang()
 
 	// 1. Top Toolbar (macOS style)
-	appTile := newIconTile(t, resIconAppLogo, 40, 22, 11,
-		func(th *LuminaTheme) color.Color { return th.AccentColor() },
-		func(th *LuminaTheme) color.Color { return color.NRGBA{R: 255, G: 255, B: 255, A: 255} },
-	)
+	appIconImg := canvas.NewImageFromResource(resAppIcon)
+	appIconImg.FillMode = canvas.ImageFillContain
+	appIconImg.SetMinSize(fyne.NewSize(42, 42))
+
 	h.titleText = newStyledText(version.AppName, t.PrimaryTextColor(), 17.5, true)
 	h.versionPill = newSoftPill("v"+version.Version, t.AccentTintColor(), t.AccentColor())
 	h.subText = newStyledText(s.HeaderSubtitle, t.MutedTextColor(), 12, false)
@@ -117,7 +118,7 @@ func (h *homeView) build() {
 	titleLine := container.NewHBox(container.NewCenter(h.titleText), container.NewCenter(h.versionPill.Root))
 	titleCol := container.NewVBox(titleLine, h.subText)
 	headerLeft := container.NewHBox(
-		container.NewCenter(appTile.Root),
+		container.NewCenter(appIconImg),
 		container.New(layout.NewCustomPaddedLayout(0, 0, 6, 0), titleCol),
 	)
 
@@ -416,7 +417,7 @@ func (h *homeView) build() {
 	// Register theme-aware elements
 	h.cards = []*ElevatedCard{pipelineCard, heroCard}
 	h.dividers = []*HairlineDivider{div1, div2}
-	h.iconTiles = []*IconTile{appTile, h.srcIconTile, dstIconTile}
+	h.iconTiles = []*IconTile{h.srcIconTile, dstIconTile}
 	h.pillButtons = []*PillButton{
 		h.btnLang, h.btnSettings, h.btnSwitchSrc, h.btnRefresh, h.btnWifi, h.btnPickDir,
 		h.btnPickOrgDir, h.btnOpenOrgDir,

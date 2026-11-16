@@ -2,7 +2,7 @@
 Name=Lumina Amber
 Comment=Offline Android photo & video backup and archive organizer
 Exec=lumina-amber
-Icon=camera-photo
+Icon=lumina-amber
 Terminal=false
 Type=Application
 Categories=Utility;Graphics;Photography;

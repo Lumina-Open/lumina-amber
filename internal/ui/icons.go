@@ -1,6 +1,15 @@
 package ui
 
-import "fyne.io/fyne/v2"
+import (
+	_ "embed"
+
+	"fyne.io/fyne/v2"
+)
+
+//go:embed assets/app_icon.png
+var appIconBytes []byte
+
+var resAppIcon = fyne.NewStaticResource("app_icon.png", appIconBytes)
 
 // Clean filled-path SVG icons (24x24 viewBox) compatible with Fyne theme.NewThemedResource / NewColoredResource.
 var (
@@ -58,9 +67,5 @@ var (
 
 	resIconLog = fyne.NewStaticResource("log.svg", []byte(
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 6a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1zm0 6a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1zm0 6a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1z"/></svg>`,
-	))
-
-	resIconAppLogo = fyne.NewStaticResource("app_logo.svg", []byte(
-		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.4 4.2a2 2 0 0 0-1.66.89L6.6 6.8H4.5A2.5 2.5 0 0 0 2 9.3v8.2A2.5 2.5 0 0 0 4.5 20h15a2.5 2.5 0 0 0 2.5-2.5V9.3a2.5 2.5 0 0 0-2.5-2.5h-2.1l-1.14-1.71a2 2 0 0 0-1.66-.89H9.4zm2.6 5.05a4.25 4.25 0 1 1 0 8.5 4.25 4.25 0 0 1 0-8.5zm0 2a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5z"/></svg>`,
 	))
 )

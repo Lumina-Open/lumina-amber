@@ -10,7 +10,6 @@ fyne-cross/
 *.tar.gz
 *.tar.xz
 *.app/
-*.icns
 
 # Test, coverage, and local databases
 *.test

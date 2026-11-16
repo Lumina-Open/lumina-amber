@@ -67,10 +67,12 @@ func NewAmberApp(dbPath string) (*AmberApp, error) {
 	i18n.SetCurrent(cfg.Language)
 
 	a := app.NewWithID("org.lumina.amber")
+	a.SetIcon(resAppIcon)
 	luminaTheme := NewLuminaTheme(ThemeMode(cfg.ThemeMode))
 	a.Settings().SetTheme(luminaTheme)
 
 	w := a.NewWindow(fmt.Sprintf("%s v%s", version.AppName, version.Version))
+	w.SetIcon(resAppIcon)
 	w.Resize(fyne.NewSize(900, 620))
 	w.CenterOnScreen()
 

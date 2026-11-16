@@ -13,6 +13,9 @@ RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 mkdir -p "${MACOS_DIR}" "${RESOURCES_DIR}"
 
 cp dist/Info.plist "${CONTENTS_DIR}/Info.plist"
+if [ -f "dist/AppIcon.icns" ]; then
+    cp dist/AppIcon.icns "${RESOURCES_DIR}/AppIcon.icns"
+fi
 
 if [ -f "${1:-}" ]; then
     echo "Installing binary: $1 -> ${MACOS_DIR}/lumina-amber"
