@@ -3,7 +3,7 @@ module lumina-amber
 go 1.24.0
 
 require (
-	fyne.io/fyne/v2 v2.8.2
+	fyne.io/fyne/v2 v2.8.3
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	modernc.org/sqlite v1.46.1
 )
